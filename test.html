@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+    <head>
+        <title>fgf tests</title>
+        <style>
+            .storm-passed {
+                opacity: 0.5;
+            }
+            .storm-incoming {
+
+            }
+            .storm-today {
+                font-weight: bold;
+            }
+            .weather-report {
+                font-family: Arial, sans-serif;
+                font-size: 21px;
+                cursor: pointer;
+                transition: background .5s ease;
+                padding: 20px;
+            }
+            .weather-report:hover {
+                background-color: #ddf;
+            }
+            #alerts {
+                padding: 0;
+            }
+            .alert {
+                width: 100%;
+                background-size: 473px 100%;
+                animation: 10s alert-scroll infinite linear;
+            }
+            @keyframes alert-scroll {
+                100% {
+                    background-position: -473px;
+                }
+            }
+            .condition-red {
+                background-image: url('https://thumbs.gfycat.com/GoodWastefulKodiakbear-max-1mb.gif');
+            }
+            .condition-yellow {
+                background-image: url('https://2.bp.blogspot.com/-FqIvlRNpMzg/WQvvBjOrG5I/AAAAAAAAN70/btXC-_k7Xk8EKP2gqI1P7VGHNaK4FOq9QCLcB/s1600/Yellow%2BAlert.gif');
+            }    
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <section id="frankie-test">
+                <h2 id="frankie-header">ACTIVE WEATHER ALERTS FROM PROFESSIONAL WEATHER METEOROLOGIST</h2>
+                <div class="frankie-container">
+                    <ul id="alerts"></ul>
+                </div>
+            </section>
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="helpers.js"></script>
+        <script src="frankie.js"></script>
+    </body>
+    
+</html>
