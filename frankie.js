@@ -24,9 +24,9 @@ $(function() {
         var nextMonthDays = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
         return date.getDate() + nextMonthDays - today.getDate();
     },
-    isWithinDateMaxAge = function(date, today) {
+    isWithinDateRange = function(date/*, today*/) {
         var maxAge = 5;
-        //var today = new Date;
+        var today = new Date;
         var difference;
         
         if (date.getFullYear() == today.getFullYear()) {
@@ -62,30 +62,25 @@ $(function() {
             }
         }
         else {
-            /* Storm year is after today */
-            var yearDifference = today.getFullYear() - date.getFullYear()
+            /* Storm date year is after today's year */
+            var yearDifference = date.getFullYear() - today.getFullYear()
             
             if (yearDifference = 1) difference = getDifferenceForNextMonth(date, today);
             else {
-                difference = (today.getFullYear() - date.getFullYear()) * 365
+                difference = (date.getFullYear() - today.getFullYear()) * 365
             }
-            //difference = getDifferenceForNextMonth(date, today);
         }
-        return difference < maxAge && difference >= 0;
+        return difference < maxAge;/*&& difference >= 0;*/
     },
     getStormDate = function(item) {
         var title = item.snippet.title;
         var afterOn = title.match(/(?<= on )(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday).*/);
 
         /* Couldn't find the keyword ' on ' followed by a day */
-        if (!afterOn) return new Date(0);
-        
+        if (!afterOn) return new Date(0); /* No date was found using this regex. 1969 was a good year, so return that */
         var stormDate = new Date(afterOn[0]);
-        if (isNaN(stormDate)) {
-            /* No date was found using this method, 1969 was a good year, so return that */
-            return new Date(0);
-        }
-        return stormDate;
+        
+        return isNaN(stormDate) ? new Date(0) : stormDate;
     };
     
     var videos;
@@ -149,10 +144,15 @@ $(function() {
                 var publishedDate = new Date(item.snippet.publishedAt);
                 var publishedMonth = publishedDate.getMonth();
 
-                if (publishedMonth != currentMonth || publishedDate.getDate() < dateCutOff) {
+                if (!isWithinDateRange(publishedDate)) {
                     stopAt = i;
                     return false;
                 }
+                
+                /*if (publishedMonth != currentMonth || publishedDate.getDate() < dateCutOff) {
+                    stopAt = i;
+                    return false;
+                }*/
             });
 
             /* Remove elements that are more than 5 days old */
@@ -210,6 +210,7 @@ $(function() {
     })        
     .done(function() {        
         var today = new Date;
+        
         $.each(videos, function() {
             var $weatherDiv = $("<div/>").text(this.snippet.title)
                 .data({
@@ -265,5 +266,6 @@ $(function() {
             $(this).addClass("is-watching");
         });
         
-    });    
+    });
+    
 });
