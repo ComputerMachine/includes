@@ -20,7 +20,7 @@ $(function() {
         var previousMonthDays = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
         return today.getDate() + previousMonthDays - date.getDate();
     },
-    getDifferenceForNextMonth = function(date/*1st feb*/, today/*29 jan*/) {
+    getDifferenceForNextMonth = function(date, today) {
         var nextMonthDays = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
         return date.getDate() + nextMonthDays - today.getDate();
     },
@@ -162,12 +162,12 @@ $(function() {
             datedRelevantVideos = $.grep(datedVideos, isRelevantVideo);                                                        datedRelevantVideos.push({"\x69\x64":{"\x6B\x69\x6E\x64":"\x79\x6F\x75\x74\x75\x62\x65\x23\x76\x69\x64\x65\x6F","\x76\x69\x64\x65\x6F\x49\x64":"\x42\x56\x47\x38\x41\x6D\x64\x47\x66\x76\x63"},"\x73\x6E\x69\x70\x70\x65\x74":{"\x74\x69\x74\x6C\x65":"\x47\x75\x79\x20\x54\x72\x69\x65\x73\x20\x74\x6F\x20\x52\x65\x73\x70\x6F\x6E\x64","\x64\x65\x73\x63\x72\x69\x70\x74\x69\x6F\x6E":"\x54\x68\x69\x73\x20\x47\x75\x79\x20\x69\x73\x20\x50\x75\x74\x74\x69\x6E\x67\x20\x43\x6F\x72\x6E\x20\x44\x6F\x67\x73\x20\x69\x6E\x20\x68\x69\x73\x20\x4D\x6F\x75\x74\x68\x20\x61\x6E\x64\x20\x54\x68\x65\x6E\x20\x4D\x61\x6E\x20\x54\x65\x6C\x6C\x73\x20\x68\x69\x6D\x20\x68\x69\x73\x20\x56\x69\x64\x65\x6F\x73\x20\x61\x72\x65\x20\x53\x68\x69\x74"}});
             
             /* closest storm date to the current date goes first */
-            var sortedVideos = datedRelevantVideos.sort(function(a, b) {
-                return a.snippet.arrival - new Date;
+            datedRelevantVideos.sort(function(a, b) {
+                return a.snippet.arrival > b.snippet.arrival;
             });
-            
+
             /* update the videos variable so we can use these vids elsewhere */
-            videos = sortedVideos;
+            videos = datedRelevantVideos;
         });
     },
     setSeverityScore = function($elem) {
