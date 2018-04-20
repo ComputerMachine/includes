@@ -16,76 +16,24 @@ $(function() {
         });
     };
     
-    var getDifferenceForPreviousMonth = function(date, today) {
-        var previousMonthDays = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
-        return today.getDate() + previousMonthDays - date.getDate();
-    },
-    getDifferenceForNextMonth = function(date, today) {
-        var nextMonthDays = new Date(date.getFullYear(), date.getMonth(), 0).getDate();
-        return date.getDate() + nextMonthDays - today.getDate();
-    },
-    isWithinDateRange = function(date/*, today*/) {
-        var maxAge = 5;
-        var today = new Date;
-        var difference;
-        
-        if (date.getFullYear() == today.getFullYear()) {
-            /* Both dates are in the same year */
-            if (date.getMonth() == today.getMonth()) {
-                /* Both dates are in the same month */
-                if (date.getDate() == today.getDate()) {
-                    /* Both dates are identical */
-                    difference = 0;
-                }
-                else if (date.getDate() < today.getDate()) { 
-                    /* Storm date is before today */
-                    difference = today.getDate() - date.getDate();
-                }
-                
-            }
-            else if (date.getMonth() < today.getMonth()) {
-                /* Storm date has a month before today */
-                difference = getDifferenceForPreviousMonth(date, today);
-            }
-            else if (date.getMonth() > today.getMonth()) {
-                /* Storm date has a month after today */
-                difference = getDifferenceForNextMonth(date, today);
-            }
-        }
-        else if (date.getFullYear() < today.getFullYear()) {
-            /* Storm date year is before today's year */
-            var yearDifference = today.getFullYear() - date.getFullYear()
-            
-            if (yearDifference = 1) difference = getDifferenceForPreviousMonth(date, today);
-            else {
-                difference = (today.getFullYear() - date.getFullYear()) * 365
-            }
-        }
-        else {
-            /* Storm date year is after today's year */
-            var yearDifference = date.getFullYear() - today.getFullYear()
-            
-            if (yearDifference = 1) difference = getDifferenceForNextMonth(date, today);
-            else {
-                difference = (date.getFullYear() - today.getFullYear()) * 365
-            }
-        }
-        return difference < maxAge;/*&& difference >= 0;*/
+    var addMetaData = function(item) {
+        var title = item.snippet.title;
     },
     getStormDate = function(item) {
         var title = item.snippet.title;
         var afterOn = title.match(/(?<= on )(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday).*/);
 
         /* Couldn't find the keyword ' on ' followed by a day */
-        if (!afterOn) return new Date(0); /* No date was found using this regex. 1969 was a good year, so return that */
-        var stormDate = new Date(afterOn[0]);
+        if (!afterOn) return;
         
-        return isNaN(stormDate) ? new Date(0) : stormDate;
-    };
-    
-    var videos;
-    
-    var isRelevantVideo = function(item) {
+        var stormDate = new Date(afterOn[0]);
+        if (isNaN(stormDate)) {
+            /* This ain't the string we're looking for */
+            return;
+        }
+        return stormDate;
+    },
+    isRelevantVideo = function(item) {
     /* Return true if video is a weather statement */
         /*
         Severity index:
@@ -93,6 +41,7 @@ $(function() {
             >= 3 Major storm [Condition Red]
         */
         var keywords = [
+		    "cindy day",
             "winter", 
             "storm", 
             "massive", 
@@ -119,62 +68,53 @@ $(function() {
         });
         item.snippet.severity = score;
         item.snippet.arrival = getStormDate(item);
-        
+
         /* If score has a positive value, it contains a keyword therefore it's a relevant video */
         return !!score;
     },
-    getRecentVideos = function() { /* Retrieve videos less than limit days old */
-        var maxAge = 5; // days
+    getRecentVideos = function() {
+        var maxAge = 5; // /* Retrieve videos less than maxAge days old */
         var url = "https://www.googleapis.com/youtube/v3/search";
+        var key = "AIzaSyD6DTXB1EK6ugK4y-MF__mvV0oU8vRXydw";
         return $.getJSON(url, 
         {
-            key: "AIzaSyD6DTXB1EK6ugK4y-MF__mvV0oU8vRXydw",
+            key: key,
             channelId: "UCx7jt4I-KPT6guTWwLxn50w",
             part: "snippet,id",
             order: "date",
             maxResults: 20
-        },
-        function(response) {
-            var today = new Date(Date.now());
-            var currentMonth = today.getMonth();
-            var dateCutOff = today.getDate()-maxAge; /* Any videos before this day will be removed */
-            var stopAt = 0;
+        })
+        .then(function(response) {
+            var now = Date.now();
+            var maxAgeMilliseconds = maxAge * 24 * 60 * 60 * 1000;
+            var cutoff = now - maxAgeMilliseconds;
+            var stopAt = undefined;  // slice(0, undefined) = full array
             
             $.each(response.items, function(i, item) {
                 var publishedDate = new Date(item.snippet.publishedAt);
-                var publishedMonth = publishedDate.getMonth();
-
-                if (!isWithinDateRange(publishedDate)) {
+                if (publishedDate < cutoff) {
                     stopAt = i;
                     return false;
                 }
-                
-                /*if (publishedMonth != currentMonth || publishedDate.getDate() < dateCutOff) {
-                    stopAt = i;
-                    return false;
-                }*/
             });
 
-            /* Remove elements that are more than 5 days old */
-            datedVideos = $(response.items).slice(0, stopAt);
-
-            /* Remove elements that don't have 'storm' keywords */
-            datedRelevantVideos = $.grep(datedVideos, isRelevantVideo);                                                        datedRelevantVideos.push({"\x69\x64":{"\x6B\x69\x6E\x64":"\x79\x6F\x75\x74\x75\x62\x65\x23\x76\x69\x64\x65\x6F","\x76\x69\x64\x65\x6F\x49\x64":"\x42\x56\x47\x38\x41\x6D\x64\x47\x66\x76\x63"},"\x73\x6E\x69\x70\x70\x65\x74":{"\x74\x69\x74\x6C\x65":"\x47\x75\x79\x20\x54\x72\x69\x65\x73\x20\x74\x6F\x20\x52\x65\x73\x70\x6F\x6E\x64","\x64\x65\x73\x63\x72\x69\x70\x74\x69\x6F\x6E":"\x54\x68\x69\x73\x20\x47\x75\x79\x20\x69\x73\x20\x50\x75\x74\x74\x69\x6E\x67\x20\x43\x6F\x72\x6E\x20\x44\x6F\x67\x73\x20\x69\x6E\x20\x68\x69\x73\x20\x4D\x6F\x75\x74\x68\x20\x61\x6E\x64\x20\x54\x68\x65\x6E\x20\x4D\x61\x6E\x20\x54\x65\x6C\x6C\x73\x20\x68\x69\x6D\x20\x68\x69\x73\x20\x56\x69\x64\x65\x6F\x73\x20\x61\x72\x65\x20\x53\x68\x69\x74"}});
-            
-            /* closest storm date to the current date goes first */
-            datedRelevantVideos.sort(function(a, b) {
-                return a.snippet.arrival > b.snippet.arrival;
+            return response.items.slice(0, stopAt);
+        })
+        .then(videos => {
+            return $.getJSON("https://www.googleapis.com/youtube/v3/videos", {
+                key: key,
+                id: "-H--E5xkGBM,159fXlZUAks,LheX9LRfst8",
+                part: "snippet,id"
+            })
+            .then(response => {                
+                return videos.concat(response.items);
             });
-
-            /* update the videos variable so we can use these vids elsewhere */
-            videos = datedRelevantVideos;
         });
     },
     setSeverityScore = function($elem) {
         var severity = $elem.data("severity");
         var yt = $("#yt-container").addClass("alert");
         severity <= 2 ? yt.addClass("condition-yellow") : yt.addClass("condition-red");
-        //redBackground($elem);
     },
     loadingVideo = function($elem) {
         $("<div/>", {id: "ytplayer"}).appendTo($elem);
@@ -198,8 +138,6 @@ $(function() {
         TazGHelpers.addYTPlayerStateHandlers(player, handlers);
     };
     
-
-    
     var task = getRecentVideos();
     
     task.fail(function() {
@@ -208,45 +146,56 @@ $(function() {
             $("#frankie-header").hide(1000);
         }, 2000);
     })        
-    .done(function() {        
-        var today = new Date;
+    .done(function(videos) {
+        /* Remove elements that don't have 'storm' keywords */
+        var relevantVideos = $.grep(videos, isRelevantVideo);
         
-        $.each(videos, function() {
-            var $weatherDiv = $("<div/>").text(this.snippet.title)
+        /* closest storm date to the current date goes first */
+        relevantVideos.sort(function(a, b) {
+            if (!a.snippet.arrival) {
+                return 1;
+            }
+            if (!b.snippet.arrival) {
+                return -1;
+            }
+            return b.snippet.arrival - a.snippet.arrival;
+        });
+        
+        var today = new Date();
+        $.each(relevantVideos, function() {
+            var replaced = this.snippet.title.replace(/Headed Towards the Earth/i, 'to Hit the Earth');
+            var changed = false;
+
+            if (replaced != this.snippet.title) changed = true;
+
+            var $weatherDiv = $("<div/>").text(replaced)
                 .data({
-                    "video-id": this.id.videoId,
-                    "severity": this.snippet.severity,
+                    "video-id": this.kind === "youtube#video" ? this.id : this.id.videoId,
+                    "severity": changed ? 9000 : this.snippet.severity,
                     "arrival": this.snippet.arrival})
-                .addClass("weather-report");
+                .addClass("weather-report")
+                .appendTo("#alerts");
 
             var arrivalDate = $weatherDiv.data("arrival");
             if (!arrivalDate) {
-                $weatherDiv.appendTo("#alerts");
-                return;
+                return true;  // continue
             }
-            
-            if (arrivalDate.getMonth() < today.getMonth()) {
-                /* Storm arrival date has passed and it's a new month */
-                if (today.getDate() > 1) return;// dont bother using this one
-            }
-                        
-            if (arrivalDate.getMonth() == today.getMonth()) {
-                if (arrivalDate.getDate() > today.getDate()) {
-                    /* Storm hasn't reached the estimated arrival date */
-                    $weatherDiv.addClass("storm-incoming");
-                }
-                else if (arrivalDate.getDate() == today.getDate()) {
-                    /* Storm is expected to hit on this day */
-                    $weatherDiv.addClass("storm-today");
-                }
-                else {
-                    /* Storm has surpassed estimated arrival date */
-                    if (today.getDate() - arrivalDate.getDate() >= 2) return;
+
+            if (today.toDateString() == arrivalDate.toDateString()) {
+                /* hold on to yer butts */
+                $weatherDiv.addClass("storm-today");
+            } else if (arrivalDate > today) {
+                /* you have no idea what's coming */
+                $weatherDiv.addClass("storm-incoming");
+            } else {
+                var diffMilliseconds = Date.now() - arrivalDate;
+                if (diffMilliseconds >= 2 * 24 * 60 * 60 * 1000) {
+                    /* looks like we survived... for now.
+                       the arrogance of man is thinking nature is in our control
+                       and not the other way around */
                     $weatherDiv.addClass("storm-passed");
                 }
             }
-            
-            $weatherDiv.appendTo("#alerts");
         });
         
         $(".weather-report").click(function() {
@@ -259,13 +208,17 @@ $(function() {
             
             var $this = $(this);
             TazGHelpers.whenYoutubeApiReady(function() {
+				var freedomPlayer = YT.get("freedom-song");
+				if (typeof freedomPlayer !== "undefined") {
+					freedomPlayer.stopVideo();
+				}
+				$("#playing").hide();
                 loadingVideo($this);
-                $("#yt-container").show();//slideToggle();
+                $("#yt-container").show();//.slideToggle();
             });
             
             $(this).addClass("is-watching");
         });
         
-    });
-    
+    });    
 });
