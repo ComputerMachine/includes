@@ -208,11 +208,11 @@ $(function() {
             
             var $this = $(this);
             TazGHelpers.whenYoutubeApiReady(function() {
-				var freedomPlayer = YT.get("freedom-song");
-				if (typeof freedomPlayer !== "undefined") {
-					freedomPlayer.stopVideo();
-				}
-				$("#playing").hide();
+		var freedomPlayer = YT.get("freedom-song");
+		if (typeof freedomPlayer !== "undefined") {
+			freedomPlayer.stopVideo();
+		}
+		$("#playing").hide();
                 loadingVideo($this);
                 $("#yt-container").show();//.slideToggle();
             });
